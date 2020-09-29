@@ -2,7 +2,7 @@
 
 ## About Karachi Futures
 
-[Karachi Futures](http://karachifutures.com/) is a research initiative cum tech shop aiming to understand the social and economic 
+[Karachi Futures](http://karachifutures.com/) is a research initiative + tech shop aiming to understand the social and economic 
 problems of Karachi in a much more deeper quantitative and qualitative sense. Our role is to research factors that may influence 
 the future of Karachi, with the purposeof enabling a much smarter, digital enabled and overall better city – ready to leapfrog into 
 the 4th Industrial Revolution.
