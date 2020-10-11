@@ -64,11 +64,17 @@ if (navigation=='HOME'):
 
     ## How does this app work?
 
-    The normalized difference vegetation index (NDVI) is a simple graphical indicator that can be used to analyze remote sensing 
+    The Normalized Difference Vegetation Index (NDVI) is a simple graphical indicator that can be used to analyze remote sensing 
     measurements, often from a space platform, assessing whether or not the target being observed contains live green vegetation. 
     
     For this experiment, we take LANDSAT8 images from February 2019 and calculate and aggregate NDVI values for different parts
     of Karachi. All data and technology used for this experiment in open source. 
+
+    ## NDVI Range
+
+    We calculate the NDVI value of each pixel between 0 and 1, where 1 is the highest level of live green vegetation. For this experiment,
+    we have kept the threshold for classifying a pixel as green at `0.0982` as per this [research paper](https://www.researchgate.net/publication/337101410_Evaluating-Spatial-Patterns_of_Urban_Green_Spaces_in_Karachi_Through_Satellite_Remote_Sensing)
+    by the Departent of Geography at the University of Punjab published in 2016.
 
     To explore different parts of this app, please use the sidebar to the left. 
     """
@@ -119,8 +125,8 @@ if (navigation=='COMPARE DISTRICTS'):
                         data=khi_districts_gpd,
                         #color='#005b96',
                         hue='SELECTED_VAL')
-        plt.title('GREEN COVER IN KARACHI DISTRICTS')
-        plt.ylabel('%AGE GREEN COVER')
+        plt.title('GREEN SPACE IN KARACHI DISTRICTS')
+        plt.ylabel('%AGE GREEN SPACE')
         plt.xlabel('')
         plt.legend()
         ax.legend_.remove()
@@ -141,7 +147,7 @@ if (navigation=='COMPARE DISTRICTS'):
     # df['c2'] = df['c1'].apply(lambda x: 10 if x == 'Value' else x)
 
     """
-    We can also compare green cover with total area in square kilometers.
+    We can also compare green space with total area in square kilometers.
     """
     districts_to_compare = st.multiselect('Which areas do you want to compare?',
                 tuple(i for i in karachi_districts))
@@ -165,9 +171,9 @@ if (navigation=='COMPARE DISTRICTS'):
 
         #ax.legend_.remove()
 
-        plt.title('GREEN COVER IN SELECTED AREAS')
+        plt.title('GREEN SPACE IN SELECTED AREAS')
         plt.xlabel('AREA IN SQKM')
-        plt.ylabel('%AGE GREEN COVER')
+        plt.ylabel('%AGE GREEN SPACE')
 
 
         label_point(khi_districts_req.AREA_KM, khi_districts_req.REQ_NDVI_P, khi_districts_req.DISTRICT, plt.gca())  
@@ -203,8 +209,8 @@ if(navigation=='COMPARE UCs'):
     grid = karachi_uc_gpd.geometry
 
     req_df = karachi_uc_gpd[['DISTRICT','UC','REQ_NDVI_P']]
-    req_df.rename(columns={'REQ_NDVI_P':'GREEN_COVER'},inplace=True)
-    req_df['GREEN_COVER'] = req_df.GREEN_COVER.apply(lambda x: str(round(x*100,2))+"%")
+    req_df.rename(columns={'REQ_NDVI_P':'GREEN_SPACE'},inplace=True)
+    req_df['GREEN_SPACE'] = req_df.GREEN_SPACE.apply(lambda x: str(round(x*100,2))+"%")
 
     st.dataframe(req_df)
 
@@ -223,7 +229,7 @@ if(navigation=='COMPARE UCs'):
 
     tooltip = folium.features.GeoJsonTooltip(
         fields=["UC", "NDVI_PCT_LABEL"],
-        aliases=["Union Council:", "Green Cover:"],
+        aliases=["Union Council:", "Green Space:"],
         localize=True,
         sticky=False,
         labels=True,
@@ -239,7 +245,7 @@ if(navigation=='COMPARE UCs'):
 
     khi_ucs_shp = folium.GeoJson(
         karachi_uc_gpd,
-        name='GREEN_COVER',
+        name='GREEN_SPACE',
         style_function=lambda feature: {
             'fillColor': colormap_ndvi(values_all_dict[int(feature['id'])]),
             'color': 'black',
@@ -268,14 +274,14 @@ if(navigation=='COMPARE UCs'):
     layout = go.Layout(
         xaxis=dict(tickformat='%',),
         yaxis=dict(ticksuffix='km'),
-        title='Area in sq km vs Green Cover'
+        title='AREA IN SQ KM vs GREEN SPACE'
     )
 
     fig = go.Figure(data=go.Scatter(x=x_axis,y=y_axis, mode='markers',text=text_label),layout=layout)
 
     str_text = """
     <br/><br/>
-    The following interactive chart compares each UC for its green cover vs total area in sq km
+    The following interactive chart compares each UC for its green space vs total area in sq km
     """
     st.markdown(str_text,unsafe_allow_html=True)
     st.plotly_chart(fig)
@@ -300,7 +306,7 @@ if (navigation=='MY AREA'):
             poly =  row.geometry
             if(poly.contains(point_obj)==True):
                 result_dict.update({'UC':row.UC,'NDVI':row.REQ_NDVI_P})
-        output_str = "You live in `{0}` \n where `{1}` for the area has some form of green cover.".format(result_dict['UC'],
+        output_str = "You live in `{0}` \n where `{1}` for the area has some form of live green vegetation.".format(result_dict['UC'],
         str(round(result_dict['NDVI']*100,2))+"%")
         st.write(output_str)
 
@@ -321,7 +327,7 @@ if (navigation=='MY AREA'):
 
         tooltip = folium.features.GeoJsonTooltip(
             fields=["UC", "NDVI_PCT_LABEL"],
-            aliases=["Union Council:", "Green Cover:"],
+            aliases=["Union Council:", "Green Space:"],
             localize=True,
             sticky=False,
             labels=True,
@@ -337,7 +343,7 @@ if (navigation=='MY AREA'):
 
         khi_ucs_shp = folium.GeoJson(
             karachi_uc_gpd,
-            name='GREEN_COVER',
+            name='GREEN_SPACE',
             style_function=lambda feature: {
                 'fillColor': colormap_ndvi(values_all_dict[int(feature['id'])]),
                 'color': 'black',
