@@ -260,7 +260,7 @@ if(navigation=='COMPARE UCs'):
     map_.add_child(colormap_ndvi)
 
     str_text ="""
-    This interactive map gives us an overview of the percentage green cover per UC
+    This interactive map gives us an overview of the percentage green space per UC
     """
     st.markdown(str_text,unsafe_allow_html=True)
     st.write(map_._repr_html_(), unsafe_allow_html=True)
