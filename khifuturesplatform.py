@@ -26,11 +26,14 @@ from random import randint
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+# branca==0.3.1 & folium==0.11.0 tested to be supported with streamlit streamlit==0.58.0
+
 import folium
 import plotly.graph_objects as go
 from branca.colormap import linear
 from folium import FeatureGroup
 
+#hides streamlit logo
 
 hide_streamlit_style = """
             <style>
@@ -40,6 +43,7 @@ hide_streamlit_style = """
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
 
+#labeling x and y axis axis and also rounding of
 
 def label_point(x, y, val, ax):
     a = pd.concat({'x': x, 'y': y, 'val': val}, axis=1)
@@ -50,12 +54,13 @@ khi_districts_gpd = gpd.read_file('data/shape_files/processed/khi_districts.shp'
 
 karachi_districts = list(khi_districts_gpd.DISTRICT)
 
-# distircts_set = set(list(khi_districts_gpd.DISTRICT))
 st.image('data/images/logo/logo_snipped.png')
 #dev/data/img/KF_Logo_02.png
 
+#main navigation bar
 navigation = st.sidebar.radio('Navigation',('HOME','COMPARE DISTRICTS','COMPARE UCs','MY AREA'))
 
+# what the app is about
 if (navigation=='HOME'):
 
     """
@@ -86,34 +91,31 @@ if (navigation=='COMPARE DISTRICTS'):
     """
     ### Karachi district/cantonment level comparisons
     """
-
+    # select box for districts form karachi districts list
     select_district = st.selectbox(
         'What area would you like to view?',
         tuple(i for i in karachi_districts))
 
     prefix = select_district.replace(' ','_')
 
+    #ndvi image path here, already processed in other backend script
     ndvi_path = 'data/images/processed/khi_districts/ndvi/'+prefix+'.tiff'
-    # st.write('you selected',select_district)
-    # st.write('you selected',ndvi_path)
 
+    #plot ndvi image
     src = rasterio.open(ndvi_path)
-
     plt.imshow(src.read(1),aspect='auto',cmap = plt.get_cmap('BuGn'))
     plt.axis('off')
-
-    #cmap=plt.get_cmap(name)
     plt.show()
     plt.title("In this visualization, the greener the area the more green vegetation that area has:",loc='left')
     st.pyplot()
-    #sns.set(rc={'figure.figsize':(8.7,7.27)})
+
+    #styling for seaborn plot
     sns.set_style("darkgrid", {'patch.force_edgecolor': False})
     sns.set(font_scale=1.2)
 
     khi_districts_gpd['SELECTED_VAL'] = khi_districts_gpd['DISTRICT'].apply(lambda x: 1 if x == select_district else 0)
 
-    ## bar plot here
-
+    #sns barplot
     """
     You can also compare where your selected area compares with other areas in Karachi
     """
@@ -124,7 +126,6 @@ if (navigation=='COMPARE DISTRICTS'):
         ax = sns.barplot(x='DISTRICT',
                         y='REQ_NDVI_P',
                         data=khi_districts_gpd,
-                        #color='#005b96',
                         hue='SELECTED_VAL')
         plt.title('GREEN SPACE IN KARACHI DISTRICTS')
         plt.ylabel('%AGE GREEN SPACE')
@@ -132,7 +133,6 @@ if (navigation=='COMPARE DISTRICTS'):
         plt.legend()
         ax.legend_.remove()
         ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
-        #ax.set_yticklabels(['{:,.2%}'.format(x) for x in khi_districts_gpd.REQ_NDVI_P])
         ax.yaxis.set_major_formatter(mtick.PercentFormatter(1))
 
         plt.savefig('viz/districts_comparison_BAR2.png',bbox_inches="tight")
@@ -141,11 +141,9 @@ if (navigation=='COMPARE DISTRICTS'):
         st.image(barplot_path,format='PNG',width=700)
 
 
-    ## bar plot here
 
     sns.set(rc={'figure.figsize':(11.7,8.27)})
 
-    # df['c2'] = df['c1'].apply(lambda x: 10 if x == 'Value' else x)
 
     """
     We can also compare green space with total area in square kilometers.
@@ -169,9 +167,6 @@ if (navigation=='COMPARE DISTRICTS'):
                             #hue='SELECTED_VAL',
                             s=80)
         ax.yaxis.set_major_formatter(mtick.PercentFormatter(1))
-
-        #ax.legend_.remove()
-
         plt.title('GREEN SPACE IN SELECTED AREAS')
         plt.xlabel('AREA IN SQKM')
         plt.ylabel('%AGE GREEN SPACE')
@@ -201,6 +196,7 @@ if (navigation=='COMPARE DISTRICTS'):
 # """
 
 
+#loading and quick preprocessing of khi district and UC shape files.
 karachi_uc_gpd = gpd.read_file('data/shape_files/processed/khi_uc.shp')
 karachi_uc_gpd = karachi_uc_gpd.sort_values(by='REQ_NDVI_P',ascending=False)
 karachi_uc_gpd = karachi_uc_gpd.reset_index(drop=True)
@@ -213,12 +209,13 @@ if(navigation=='COMPARE UCs'):
 
     grid = karachi_uc_gpd.geometry
 
+    #some more preprocessing and separating required data for display as tabular data
     req_df = karachi_uc_gpd[['DISTRICT','UC','REQ_NDVI_P']]
     req_df.rename(columns={'REQ_NDVI_P':'GREEN_SPACE'},inplace=True)
     req_df['GREEN_SPACE'] = req_df.GREEN_SPACE.apply(lambda x: str(round(x*100,2))+"%")
-
     st.dataframe(req_df)
 
+    #choropleth map code starts here
     values_all_dict = dict(karachi_uc_gpd.REQ_NDVI_P)
     colormap_ndvi = linear.YlGn_09.scale(
         karachi_uc_gpd.REQ_NDVI_P.min(),
@@ -227,7 +224,7 @@ if(navigation=='COMPARE UCs'):
     popup_dict = karachi_uc_gpd.REQ_NDVI_P.apply(lambda x: str(round(x*100,2))+"%")
 
 
-    # NDVI MAP
+    #Folium NDVI map - basically a choropleth map
     map_ = folium.Map(location=[24.859089, 67.035289], tiles='openstreetmap', zoom_start=10)
     karachi_uc_gpd['NDVI_PCT_LABEL'] = karachi_uc_gpd.REQ_NDVI_P.apply(lambda x: str(round(x*100,2))+'%')
 
@@ -269,19 +266,16 @@ if(navigation=='COMPARE UCs'):
     """
     st.markdown(str_text,unsafe_allow_html=True)
     st.write(map_._repr_html_(), unsafe_allow_html=True)
-    #map_.save('../viz/khi_ndvi_uc_map.html')
 
+    #plot.ly scatter chart starts here
     x_axis = karachi_uc_gpd.REQ_NDVI_P
     y_axis = karachi_uc_gpd.AREA_KM
     text_label = karachi_uc_gpd.UC
-
-
     layout = go.Layout(
         xaxis=dict(tickformat='%',),
         yaxis=dict(ticksuffix='km'),
         title='AREA IN SQ KM vs GREEN SPACE'
     )
-
     fig = go.Figure(data=go.Scatter(x=x_axis,y=y_axis, mode='markers',text=text_label),layout=layout)
 
     str_text = """
@@ -296,17 +290,25 @@ if (navigation=='MY AREA'):
     st.write('Where do you live?')
     user_input = " "
     user_input = st.text_input("We don't need to know your exact address, just the general area will do. Karachi Futures will not store your input.")
+    
+    # adding Karachi at the end of user_input to help OSM geocode
     user_input =  user_input + ' Karachi'
+
+    #need randomized app name to ensure requests are not blocked by OSM
     app_name = 'khigreenspaces_app_'+str(randint(0,10))+str(randint(0,10))+str(randint(0,10))
     geolocator = Nominatim(user_agent=app_name)
     geocode = partial(geolocator.geocode, language="en")
+
+    #api call
     result = geocode(user_input)
 
     if(result!=None):
-    
+        #reading and using returned data from OSM
         result_coord = list(reversed(result[1]))
         point_obj = Point(result_coord)
         result_dict = dict()
+
+        #figuring out UC based on geocoded address - not very accurate but good enough for free tier
         for ind,row in karachi_uc_gpd.iterrows():
             poly =  row.geometry
             if(poly.contains(point_obj)==True):
@@ -315,7 +317,7 @@ if (navigation=='MY AREA'):
         str(round(result_dict['NDVI']*100,2))+"%")
         st.write(output_str)
 
-        
+        #code for map starts here
         grid = karachi_uc_gpd.geometry
 
         values_all_dict = dict(karachi_uc_gpd.REQ_NDVI_P)
@@ -325,7 +327,7 @@ if (navigation=='MY AREA'):
 
         popup_dict = karachi_uc_gpd.REQ_NDVI_P.apply(lambda x: str(round(x*100,2))+"%")
 
-
+        
         map_ = folium.Map(location=[result_coord[1], result_coord[0]], tiles='openstreetmap', zoom_start=12)
         karachi_uc_gpd['NDVI_PCT_LABEL'] = karachi_uc_gpd.REQ_NDVI_P.apply(lambda x: str(round(x*100,2))+'%')
 
@@ -359,6 +361,7 @@ if (navigation=='MY AREA'):
             tooltip=tooltip
         )
 
+        #placing a marker based on your approximate location
         your_loc = folium.Marker([result_coord[1], result_coord[0]], popup='You live (almost) here!')
 
         map_.add_child(khi_ucs_shp)
@@ -366,6 +369,7 @@ if (navigation=='MY AREA'):
         map_.add_child(your_loc)
 
         st.write(map_._repr_html_(), unsafe_allow_html=True)
+
     elif(result==None):
         st.write('Could not geocode area, please try again. Maybe a different spelling? Or trying a different name for your area')
 
