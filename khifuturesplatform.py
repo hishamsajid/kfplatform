@@ -31,6 +31,7 @@ import plotly.graph_objects as go
 from branca.colormap import linear
 from folium import FeatureGroup
 
+
 hide_streamlit_style = """
             <style>
             #MainMenu {visibility: hidden;}
@@ -83,11 +84,11 @@ if (navigation=='HOME'):
 if (navigation=='COMPARE DISTRICTS'):
 
     """
-    ### Karachi district level comparisons
+    ### Karachi district/cantonment level comparisons
     """
 
     select_district = st.selectbox(
-        'What are would you like to view?',
+        'What area would you like to view?',
         tuple(i for i in karachi_districts))
 
     prefix = select_district.replace(' ','_')
@@ -198,7 +199,11 @@ if (navigation=='COMPARE DISTRICTS'):
 # We can use the same logic to look at Karachi at the UC level, the following map shows the percentage of
 # Green Cover in each UC for Karachi
 # """
+
+
 karachi_uc_gpd = gpd.read_file('data/shape_files/processed/khi_uc.shp')
+karachi_uc_gpd = karachi_uc_gpd.sort_values(by='REQ_NDVI_P',ascending=False)
+karachi_uc_gpd = karachi_uc_gpd.reset_index(drop=True)
 
 
 if(navigation=='COMPARE UCs'):
@@ -228,8 +233,8 @@ if(navigation=='COMPARE UCs'):
 
 
     tooltip = folium.features.GeoJsonTooltip(
-        fields=["UC", "NDVI_PCT_LABEL"],
-        aliases=["Union Council:", "Green Space:"],
+        fields=["DISTRICT","UC", "NDVI_PCT_LABEL"],
+        aliases=['District/Cantonment',"Union Council:", "Green Space:"],
         localize=True,
         sticky=False,
         labels=True,
