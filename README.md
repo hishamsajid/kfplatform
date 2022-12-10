@@ -22,4 +22,4 @@ we have kept the threshold for classifying a pixel as green at `0.0982` as per t
 
 ### Working site
 
-You access the working prototype [here](https://kfplatform-poc.herokuapp.com/) - please consider that it is still very much in wip
+You access the working prototype [here](https://kfplatform-poc.herokuapp.com/); please consider that it is still very much in wip
